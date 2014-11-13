@@ -349,6 +349,7 @@ func (c *Conn) authenticate() error {
 		Passwd:          c.passwd,
 	})
 	if err != nil {
+		log.Printf("Auth error: encode packet: %s", err);
 		return err
 	}
 
@@ -356,6 +357,7 @@ func (c *Conn) authenticate() error {
 
 	_, err = c.conn.Write(buf[:n+4])
 	if err != nil {
+		log.Printf("Auth error: write packet: %s", err);
 		return err
 	}
 
@@ -366,6 +368,8 @@ func (c *Conn) authenticate() error {
 	// package length
 	_, err = io.ReadFull(c.conn, buf[:4])
 	if err != nil {
+		log.Printf("Auth error: read package len: %s", err);
+
 		// Sometimes zookeeper just drops connection on invalid session data,
 		// we prefer to drop session and start from scratch when that event
 		// occurs instead of dropping into loop of connect/disconnect attempts
@@ -383,12 +387,14 @@ func (c *Conn) authenticate() error {
 
 	_, err = io.ReadFull(c.conn, buf[:blen])
 	if err != nil {
+		log.Printf("Auth error: read package: %s", err);
 		return err
 	}
 
 	r := connectResponse{}
 	_, err = decodePacket(buf[:blen], &r)
 	if err != nil {
+		log.Printf("Auth error: decode packet: %s", err);
 		return err
 	}
 	if r.SessionID == 0 {
